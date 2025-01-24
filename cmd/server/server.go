@@ -24,6 +24,6 @@ func UDPListen() {
 	fmt.Println("Running on port :3000")
 
 	for i := 0; i <= internal.GetTotalImages("/home/rameez/Downloads/frametest/"); i++ {
-
+		// frame, err := internal.ImageToByte("/home/rameez/Downloads/frametest/frame_.jpg")
 	}
 }
