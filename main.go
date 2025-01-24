@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"main.go/internal"
+)
 
 func main() {
-	fmt.Println("hi")
+	internal.FFmpegFrameCapture()
 }
