@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 
 	"main.go/internal"
 )
@@ -23,7 +24,15 @@ func UDPListen() {
 
 	fmt.Println("Running on port :3000")
 
-	for i := 0; i <= internal.GetTotalImages("/home/rameez/Downloads/frametest/"); i++ {
-		// frame, err := internal.ImageToByte("/home/rameez/Downloads/frametest/frame_.jpg")
+	for i := 1; i <= internal.GetTotalImages("/home/rameez/Downloads/frametest/"); i++ {
+		frame, err := internal.ImageToByte("/home/rameez/Downloads/frametest/frame_" + strconv.Itoa(i) + ".jpg")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = ln.WriteToUDP(frame, addr)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
