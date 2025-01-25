@@ -1,10 +1,11 @@
-package cmd
+package server
 
 import (
 	"fmt"
 	"log"
 	"net"
 	"strconv"
+	"time"
 
 	"main.go/internal"
 )
@@ -24,12 +25,19 @@ func UDPListen() {
 
 	fmt.Println("Running on port :3000")
 
-	for i := 1; i <= internal.GetTotalImages("/home/rameez/Downloads/frametest/"); i++ {
-		frame, err := internal.ImageToByte("/home/rameez/Downloads/frametest/frame_" + strconv.Itoa(i) + ".jpg")
+	go internal.FFmpegFrameCapture()
+	time.Sleep(time.Second * 5)
+
+	i := 1
+	for {
+
+		frame, err := internal.ImageToByte("/home/rameez/Downloads/framecreation/frame_" + strconv.Itoa(i) + ".jpg")
 		if err != nil {
 			log.Fatal(err)
+			break
 		}
 
+		fmt.Printf("Sending frame %d with data size: %d bytes\n", i, len(frame))
 		// sending frameIndex
 		_, err = ln.WriteToUDP([]byte(strconv.Itoa(i)), addr)
 		if err != nil {
@@ -41,5 +49,8 @@ func UDPListen() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		fmt.Println("frame sent with data")
+		i++
 	}
 }
