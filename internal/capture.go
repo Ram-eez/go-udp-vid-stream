@@ -1,7 +1,10 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"log"
 	"os"
 
@@ -39,4 +42,22 @@ func GetTotalImages(path string) int {
 	}
 
 	return len(files)
+}
+
+func ByteToImage(frameData []byte, frameIndex string) {
+	image, _, err := image.Decode(bytes.NewReader(frameData))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	frame, err := os.Create("frame_" + frameIndex + ".jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer frame.Close()
+
+	if err := jpeg.Encode(frame, image, nil); err != nil {
+		log.Fatal(err)
+	}
 }

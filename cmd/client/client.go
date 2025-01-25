@@ -3,6 +3,8 @@ package cmd
 import (
 	"log"
 	"net"
+
+	"main.go/internal"
 )
 
 func UDPDial() {
@@ -11,11 +13,22 @@ func UDPDial() {
 		log.Fatal(err)
 	}
 
-	ln, err := net.DialUDP("udp", nil, addr)
+	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer ln.Close()
+	defer conn.Close()
 
+	buf := make([]byte, 1024)
+
+	for {
+		frameIndex, err := conn.Read(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		internal.ByteToImage(frameIndex)
+
+	}
 }
