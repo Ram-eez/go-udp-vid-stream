@@ -30,6 +30,13 @@ func UDPListen() {
 			log.Fatal(err)
 		}
 
+		// sending frameIndex
+		_, err = ln.WriteToUDP([]byte(strconv.Itoa(i)), addr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// sending frameData
 		_, err = ln.WriteToUDP(frame, addr)
 		if err != nil {
 			log.Fatal(err)

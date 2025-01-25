@@ -44,13 +44,13 @@ func GetTotalImages(path string) int {
 	return len(files)
 }
 
-func ByteToImage(frameData []byte, frameIndex string) {
+func ByteToImage(frameData []byte, frameIndex []byte) {
 	image, _, err := image.Decode(bytes.NewReader(frameData))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	frame, err := os.Create("frame_" + frameIndex + ".jpg")
+	frame, err := os.Create("frame_" + string(frameIndex) + ".jpg")
 	if err != nil {
 		log.Fatal(err)
 	}

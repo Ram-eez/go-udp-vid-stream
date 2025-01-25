@@ -20,15 +20,22 @@ func UDPDial() {
 
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
+	var frameIndex []byte
+
+	var frameData []byte
 
 	for {
-		frameIndex, err := conn.Read(buf)
+		_, err := conn.Read(frameIndex)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		internal.ByteToImage(frameIndex)
+		_, err = conn.Read(frameData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		internal.ByteToImage(frameData, frameIndex)
 
 	}
 }
