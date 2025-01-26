@@ -45,12 +45,16 @@ func UDPListen() {
 		}
 
 		// sending frameData
-
 		frameSize := len(frame)
+
+		_, err = ln.WriteToUDP([]byte(strconv.Itoa(frameSize)), clientAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
 		totalChunks := (frameSize + chunkSize - 1) / chunkSize
 		for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
 			start := chunkIndex * chunkSize
-			end := start + chunkIndex
+			end := start + chunkSize
 
 			if end > frameSize {
 				end = frameSize
