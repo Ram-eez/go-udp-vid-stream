@@ -1,8 +1,10 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"strconv"
 
 	"main.go/internal"
 )
@@ -21,22 +23,22 @@ func UDPDial() {
 	log.Println("Connected to server at", addr)
 	defer conn.Close()
 
-	var frameIndex = make([]byte, 1024*5)
-	var frameData = make([]byte, 65536)
-	for {
-		n, err := conn.Read(frameIndex)
-		if err != nil {
-			log.Printf("Error reading frame index: %v\n", err)
-			break
-		}
-		log.Printf("Received frame index: %s\n", string(frameIndex[:n]))
+	var frameData = make([]byte, 65536*20)
 
+	if _, err := conn.Write([]byte("Hello from client")); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Message sent")
+	i := 1
+	for {
 		_, err = conn.Read(frameData)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		frameIndex := strconv.Itoa(i)
 		internal.ByteToImage(frameData, frameIndex)
-
+		i++
 	}
 }

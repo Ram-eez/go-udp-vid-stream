@@ -25,6 +25,12 @@ func UDPListen() {
 
 	fmt.Println("Running on port :3000")
 
+	var buf [1024]byte
+	_, clientAddr, err := ln.ReadFromUDP(buf[:])
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	go internal.FFmpegFrameCapture()
 	time.Sleep(time.Second * 5)
 
@@ -37,15 +43,8 @@ func UDPListen() {
 			break
 		}
 
-		fmt.Printf("Sending frame %d with data size: %d bytes\n", i, len(frame))
-		// sending frameIndex
-		_, err = ln.WriteToUDP([]byte(strconv.Itoa(i)), addr)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		// sending frameData
-		_, err = ln.WriteToUDP(frame, addr)
+		_, err = ln.WriteToUDP(frame, clientAddr)
 		if err != nil {
 			log.Fatal(err)
 		}

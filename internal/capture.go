@@ -44,11 +44,11 @@ func GetTotalImages(path string) int {
 	return len(files)
 }
 
-func ByteToImage(frameData []byte, frameIndex []byte) {
+func ByteToImage(frameData []byte, frameIndex string) {
 	fmt.Printf("Received %d bytes of image data\n", len(frameData))
-	if len(frameData) > 2 {
-		fmt.Printf("First 3 bytes: %x\n", frameData[:3]) // Print first 3 bytes for inspection
-	}
+	// if len(frameData) > 2 {
+	// 	fmt.Printf("First 3 bytes: %x\n", frameData[:3]) // Print first 3 bytes for inspection
+	// }
 
 	image, _, err := image.Decode(bytes.NewReader(frameData))
 	if err != nil {
@@ -56,7 +56,7 @@ func ByteToImage(frameData []byte, frameIndex []byte) {
 		log.Fatal(err)
 	}
 
-	frame, err := os.Create("/home/rameez/Downloads/framereseption/frame_" + string(frameIndex) + ".jpg")
+	frame, err := os.Create("/home/rameez/Downloads/reception/frame_" + frameIndex + ".jpg")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,4 +66,5 @@ func ByteToImage(frameData []byte, frameIndex []byte) {
 	if err := jpeg.Encode(frame, image, nil); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Saving frame to: %s\n", frame.Name())
 }
