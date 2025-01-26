@@ -34,6 +34,7 @@ func UDPListen() {
 	go internal.FFmpegFrameCapture()
 	time.Sleep(time.Second * 5)
 
+	const chunkSize = 1024
 	i := 1
 	for {
 
@@ -44,9 +45,22 @@ func UDPListen() {
 		}
 
 		// sending frameData
-		_, err = ln.WriteToUDP(frame, clientAddr)
-		if err != nil {
-			log.Fatal(err)
+
+		frameSize := len(frame)
+		totalChunks := (frameSize + chunkSize - 1) / chunkSize
+		for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
+			start := chunkIndex * chunkSize
+			end := start + chunkIndex
+
+			if end > frameSize {
+				end = frameSize
+			}
+
+			_, err := ln.WriteToUDP(frame[start:end], clientAddr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Sent chunk %d/%d\n", chunkIndex+1, totalChunks)
 		}
 
 		fmt.Println("frame sent with data")

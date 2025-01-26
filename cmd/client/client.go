@@ -23,7 +23,7 @@ func UDPDial() {
 	log.Println("Connected to server at", addr)
 	defer conn.Close()
 
-	var frameData = make([]byte, 65536*20)
+	var frameData = make([]byte, 614400)
 
 	if _, err := conn.Write([]byte("Hello from client")); err != nil {
 		log.Fatal(err)
