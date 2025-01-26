@@ -30,7 +30,7 @@ func UDPDial() {
 	fmt.Println("Message sent")
 	buf := make([]byte, 1024)
 	const chunkSize = 1024
-	var frameData []byte
+
 	i := 1
 	for {
 		n, err := conn.Read(buf)
@@ -39,8 +39,13 @@ func UDPDial() {
 
 		}
 
-		frameData = frameData[:0]
-		frameData = ReceiveChunks(chunkSize, frameData, len(buf[:n]), conn)
+		frameSize, err := strconv.Atoi(string(buf[:n]))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var frameData []byte
+		frameData = ReceiveChunks(chunkSize, frameData, frameSize, conn)
 
 		frameIndex := strconv.Itoa(i)
 		internal.ByteToImage(frameData, frameIndex)
@@ -48,8 +53,8 @@ func UDPDial() {
 	}
 }
 
-func ReceiveChunks(chunkSize int, frameData []byte, Data int, conn net.Conn) []byte {
-	totalChunks := (Data + chunkSize - 1) / chunkSize
+func ReceiveChunks(chunkSize int, frameData []byte, frameSize int, conn net.Conn) []byte {
+	totalChunks := (frameSize + chunkSize - 1) / chunkSize
 	for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
 		chunk := make([]byte, chunkSize)
 		n, err := conn.Read(chunk)
