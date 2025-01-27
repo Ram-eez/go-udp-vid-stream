@@ -44,18 +44,16 @@ func GetTotalImages(path string) int {
 	return len(files)
 }
 
+// ByteToImage processes received frame data and saves it as a JPEG image.
 func ByteToImage(frameData []byte, frameIndex string) {
 	fmt.Printf("Received %d bytes of image data\n", len(frameData))
-	// if len(frameData) > 2 {
-	// 	fmt.Printf("First 3 bytes: %x\n", frameData[:3]) // Print first 3 bytes for inspection
-	// }
 
-	if len(frameData) > 10 {
-		fmt.Printf("First 10 bytes of frame data: %x\n", frameData[:10])
-	} else {
+	// Verify frame data size
+	if len(frameData) < 10 {
 		log.Printf("Frame %s is too small to process\n", frameIndex)
 		return
 	}
+	fmt.Printf("First 10 bytes of frame data: %x\n", frameData[:10])
 
 	// Check for JPEG header (SOI marker 0xFFD8)
 	if !hasJPEGHeader(frameData) {
@@ -63,27 +61,31 @@ func ByteToImage(frameData []byte, frameIndex string) {
 		return
 	}
 
-	image, _, err := image.Decode(bytes.NewReader(frameData))
+	// Decode the JPEG image from frame data
+	img, _, err := image.Decode(bytes.NewReader(frameData))
 	if err != nil {
 		log.Printf("Skipping invalid frame at index %s: %v\n", frameIndex, err)
 		return
 	}
-	frame, err := os.Create("/home/rameez/Downloads/reception/frame_" + frameIndex + ".jpg")
-	if err := jpeg.Encode(frame, image, nil); err != nil {
+
+	// Create output file for the frame
+	outputPath := fmt.Sprintf("/home/rameez/Downloads/reception/frame_%s.jpg", frameIndex)
+	frameFile, err := os.Create(outputPath)
+	if err != nil {
+		log.Printf("Failed to create file for frame %s: %v\n", frameIndex, err)
+		return
+	}
+	defer frameFile.Close()
+
+	// Encode and save the image as JPEG
+	if err := jpeg.Encode(frameFile, img, nil); err != nil {
 		log.Printf("Failed to save JPEG for frame %s: %v\n", frameIndex, err)
 		return
 	}
-
-	defer frame.Close()
-
-	if err := jpeg.Encode(frame, image, nil); err != nil {
-		log.Printf("Failed to save JPEG for frame %s: %v\n", frameIndex, err)
-		return
-	}
-	fmt.Printf("Saving frame to: %s\n", frame.Name())
+	fmt.Printf("Successfully saved frame to: %s\n", outputPath)
 }
 
+// hasJPEGHeader checks if the given data starts with a JPEG SOI marker (0xFFD8).
 func hasJPEGHeader(data []byte) bool {
-	// JPEG files start with SOI marker 0xFFD8
 	return len(data) >= 2 && data[0] == 0xFF && data[1] == 0xD8
 }

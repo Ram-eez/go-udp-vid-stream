@@ -1,15 +1,15 @@
 package client
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
-	"strings"
 
 	"main.go/internal"
 )
+
+const frameDelimiter = "END_OF_FRAME"
 
 func UDPDial() {
 	addr, err := net.ResolveUDPAddr("udp", "localhost:3000")
@@ -25,51 +25,60 @@ func UDPDial() {
 	log.Println("Connected to server at", addr)
 	defer conn.Close()
 
+	// Initial handshake message
 	if _, err := conn.Write([]byte("Hello from client")); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Message sent")
-	// buf := make([]byte, 1024)
+	fmt.Println("Handshake message sent to server")
+
 	const chunkSize = 1024
+	frameIndex := 1
 
-	i := 1
 	for {
-		reader := bufio.NewReader(conn)
-		frameSizeStr, err := reader.ReadString('\n')
+		// Receive chunks for a single frame
+		frameData, err := ReceiveChunks(chunkSize, conn)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error receiving frame %d: %v. Exiting...", frameIndex, err)
+			break
 		}
 
-		frameSizeStr = strings.TrimSpace(frameSizeStr)
-		fmt.Printf("Received frame size string: %s\n", frameSizeStr)
+		// Save the received frame as an image
+		internal.ByteToImage(frameData, strconv.Itoa(frameIndex))
+		fmt.Printf("Frame %d saved successfully\n", frameIndex)
 
-		frameSize, err := strconv.Atoi(frameSizeStr)
-		if err != nil {
-			log.Printf("Invalid frame size: %s", err)
-			continue
-		}
-
-		var frameData []byte
-		frameData = ReceiveChunks(chunkSize, frameData, frameSize, conn)
-
-		frameIndex := strconv.Itoa(i)
-		internal.ByteToImage(frameData, frameIndex)
-		i++
+		frameIndex++
 	}
 }
 
-func ReceiveChunks(chunkSize int, frameData []byte, frameSize int, conn net.Conn) []byte {
-	totalChunks := (frameSize + chunkSize - 1) / chunkSize
-	for chunkIndex := 0; chunkIndex < totalChunks; chunkIndex++ {
+func ReceiveChunks(chunkSize int, conn net.Conn) ([]byte, error) {
+	frameData := make([]byte, 0, chunkSize*100) // Preallocate a reasonable buffer for the frame
+
+	for {
 		chunk := make([]byte, chunkSize)
 		n, err := conn.Read(chunk)
 		if err != nil {
-			log.Fatal(err)
-			return nil
+			return nil, fmt.Errorf("error reading chunk: %v", err)
 		}
+
 		frameData = append(frameData, chunk[:n]...)
-		fmt.Printf("Received chunk %d/%d\n", chunkIndex+1, totalChunks)
+		fmt.Printf("Received chunk of size %d bytes\n", n)
+
+		// Stop reading when the server signals the end of a frame (delimiter received)
+		if n < chunkSize {
+			// Check if delimiter is received
+			if string(chunk[:n]) == frameDelimiter {
+				fmt.Println("End of frame detected (delimiter received)")
+				break
+			}
+		}
 	}
-	return frameData
+
+	// Check if the frame data is valid before proceeding
+	if len(frameData) == 0 {
+		return nil, fmt.Errorf("received empty frame data")
+	}
+
+	fmt.Printf("Total received frame size: %d bytes\n", len(frameData))
+	return frameData, nil
 }
