@@ -46,7 +46,7 @@ func UDPListen() {
 
 		// sending frameData
 		frameSize := len(frame)
-		frameSizeStr := strconv.Itoa(frameSize) + "\n" // Add a newline to denote end of size
+		frameSizeStr := strconv.Itoa(frameSize) // Add a newline to denote end of size
 		_, err = ln.WriteToUDP([]byte(frameSizeStr), clientAddr)
 		if err != nil {
 			log.Fatal(err)
