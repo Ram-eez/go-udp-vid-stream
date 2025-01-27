@@ -1,10 +1,12 @@
 package client
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"main.go/internal"
 )
@@ -28,20 +30,24 @@ func UDPDial() {
 	}
 
 	fmt.Println("Message sent")
-	buf := make([]byte, 1024)
+	// buf := make([]byte, 1024)
 	const chunkSize = 1024
 
 	i := 1
 	for {
-		n, err := conn.Read(buf)
+		reader := bufio.NewReader(conn)
+		frameSizeStr, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
-
 		}
 
-		frameSize, err := strconv.Atoi(string(buf[:n]))
+		frameSizeStr = strings.TrimSpace(frameSizeStr)
+		fmt.Printf("Received frame size string: %s\n", frameSizeStr)
+
+		frameSize, err := strconv.Atoi(frameSizeStr)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Invalid frame size: %s", err)
+			continue
 		}
 
 		var frameData []byte
